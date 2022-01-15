@@ -1,5 +1,6 @@
 package dev.manpreet.kaostest;
 
+import dev.manpreet.kaostest.dto.MonitoringConfig;
 import dev.manpreet.kaostest.dto.internal.RunnerStore;
 import dev.manpreet.kaostest.dto.internal.TestStore;
 import dev.manpreet.kaostest.dto.xml.Suite;
@@ -8,9 +9,11 @@ import dev.manpreet.kaostest.providers.ThreadCountProvider;
 import dev.manpreet.kaostest.providers.duration.FixedDurationProvider;
 import dev.manpreet.kaostest.providers.threadcount.FixedThreadCountProvider;
 import dev.manpreet.kaostest.runner.TestRunnersManager;
+import dev.manpreet.kaostest.util.CommonUtils;
 import dev.manpreet.kaostest.util.SuiteXMLUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -18,6 +21,20 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class Runner {
+
+    private MonitoringConfig monitoringConfig;
+
+    public Runner() {
+        monitoringConfig = CommonUtils.getMonitoringConfigFromEnvironment();
+    }
+
+    public Runner(String monitoringConfigYAML) {
+        monitoringConfig = CommonUtils.getMonitoringConfigFromYAMLFile(monitoringConfigYAML);
+    }
+
+    public Runner(MonitoringConfig monitoringConfig) {
+        this.monitoringConfig = monitoringConfig;
+    }
 
     /**
      * Run the tests in the defined suite XML for 5 minutes in 10 threads
@@ -37,7 +54,7 @@ public class Runner {
      * @return RunnerStore - Holds statistics about the complete execution
      */
     public RunnerStore runTests(String suiteXmlPath, ThreadCountProvider threadCountProvider, DurationProvider durationProvider) {
-
+        monitoringConfig.sanitizeConfig(threadCountProvider);
         Suite suite = SuiteXMLUtils.deserializeSuiteXML(suiteXmlPath);
         if (!SuiteXMLUtils.isSuiteValid(suite)) {
             throw new KaosException("Validation of suite XML failed. Please check logs");

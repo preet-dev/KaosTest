@@ -1,0 +1,2 @@
+monitoringConfig:
+  failureRatePollSeconds: 30
